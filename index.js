@@ -27,7 +27,7 @@ window.onload = function ()  {
   let playerOneLives = 10;
   let playerTwoLives = 10;
 
-  // # handle player vertical movement and shoots
+  // handle player vertical movement and shoots
   const handleKeyboardInput = (e) => {
     const { key } = e;
     if (Object.keys(keyboardPlayerMoves).includes(key)) {
@@ -44,12 +44,8 @@ window.onload = function ()  {
 
   // change shoots position
   const moveshootsOnScreen = () => {
-    playerOneshootsOnScreen.forEach(shoot => {
-      shoot.xPosition += SHOOT_SPEED;
-    });
-    playerTwoshootsOnScreen.forEach(shoot => {
-      shoot.xPosition -= SHOOT_SPEED;
-    });
+    playerOneshootsOnScreen.map(shoot => shoot.xPosition += SHOOT_SPEED);
+    playerTwoshootsOnScreen.map(shoot => shoot.xPosition -= SHOOT_SPEED);
   }
 
   // change player one vertical position
