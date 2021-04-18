@@ -19,4 +19,4 @@ const constants = {
   PLAYER_WIDTH,
 };
 
-export default constants
+module.exports = constants
