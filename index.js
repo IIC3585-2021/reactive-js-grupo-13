@@ -12,8 +12,8 @@ window.onload = function ()  {
   let canvas = document.getElementById('app');
   let context = canvas.getContext('2d');
 
-  // Set frames
-  setInterval(updateCanvas,  1000/60);
+  // set frames for object movements. calls the function that modifies the position of the shots, also the one that updates the position of the objects and the one that verifies the collision conditions
+  setInterval(updateGameState,  1000/60);
   
   // players vertical position
   let playerOnePosition = canvas.height/2;
@@ -23,10 +23,11 @@ window.onload = function ()  {
   const playerOneshootsOnScreen = [];
   const playerTwoshootsOnScreen = [];
 
-  // player lives
+  // # of player lives
   let playerOneLives = 10;
   let playerTwoLives = 10;
 
+  // # handle player vertical movement and shoots
   const handleKeyboardInput = (e) => {
     const { key } = e;
     if (Object.keys(keyboardPlayerMoves).includes(key)) {
@@ -41,6 +42,7 @@ window.onload = function ()  {
 
   window.addEventListener('keydown', handleKeyboardInput)
 
+  // change shoots position
   const moveshootsOnScreen = () => {
     playerOneshootsOnScreen.forEach(shoot => {
       shoot.xPosition += SHOOT_SPEED;
@@ -49,15 +51,18 @@ window.onload = function ()  {
       shoot.xPosition -= SHOOT_SPEED;
     });
   }
-  
+
+  // change player one vertical position
   const movePlayerOne = (positionChangeValue) => {
     playerOnePosition += positionChangeValue;
   }
-  
+
+  // change player two vertical position
   const movePlayerTwo = (positionChangeValue) => {
     playerTwoPosition += positionChangeValue;
   }
   
+  // add shoot to player one list
   const playerOneShoot = () => {
     const shoot = {
       xPosition: 0,
@@ -65,7 +70,8 @@ window.onload = function ()  {
     }
     playerOneshootsOnScreen.push(shoot);
   }
-  
+
+  // add shoot to player two list
   const playerTwoShoot = () => {
     const shoot = {
       xPosition: canvas.width,
@@ -74,6 +80,7 @@ window.onload = function ()  {
     playerTwoshootsOnScreen.push(shoot);
   }
   
+  // move functions by keyword
   const keyboardPlayerMoves = {
     w: movePlayerOne,
     s: movePlayerOne,
@@ -81,11 +88,13 @@ window.onload = function ()  {
     ArrowDown: movePlayerTwo,
   }
   
+  // shoot functions by keyword
   const keyboardPlayerShoots = {
     d: playerOneShoot,
     ArrowLeft: playerTwoShoot,
   }
   
+  // change in positions value by keyword
   const keyboardMoveValues = {
     w: -PLAYER_MOVEMENT,
     s: PLAYER_MOVEMENT,
@@ -93,12 +102,12 @@ window.onload = function ()  {
     ArrowDown: PLAYER_MOVEMENT,
   }
 
+  // modifies the canvas
   const drawCanvas = () => {
-    // create the canvas
     context.fillStyle = 'black';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Add the text color
+    // Add text color
     context.fillStyle = 'white';
 
     // Add players 
@@ -113,12 +122,13 @@ window.onload = function ()  {
       context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
     })  
   
-    // Add lives text
+    // Add number of lives per playes text
     context.font = "20px serif";
     context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
     context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
   }	
 
+  // check if a shoot has reached a player
   const checkCollision = (positionOne, positionTwo, margin) => {
     if (positionOne <= positionTwo + margin  && positionOne >= positionTwo) return true;
     return false;
@@ -137,6 +147,7 @@ window.onload = function ()  {
     }
   }
 
+  // check if players 1 or 2 shoot has hit the opponent
   const checkShootsPosition = () => {
     playerOneshootsOnScreen.forEach(shoot => {
       if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
@@ -154,7 +165,8 @@ window.onload = function ()  {
     })
   }
 
-  function updateCanvas(){
+  // function called repeatedly within the interval
+  function updateGameState(){
       moveshootsOnScreen();
       drawCanvas();
       checkShootsPosition()
