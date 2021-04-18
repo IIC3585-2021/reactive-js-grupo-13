@@ -1,4 +1,5 @@
-import constants from './constants.js';
+const constants = require('./constants.js');
+const Rx = require('rxjs');
 
 const { SHOOT_SPEED,
   PLAYER_MOVEMENT,
@@ -6,28 +7,26 @@ const { SHOOT_SPEED,
   PLAYER_HEIGHT,
   PLAYER_WIDTH } = constants;
 
-// players vertical position
-let playerOnePosition = 40;
-let playerTwoPosition = 40;
-
-// shoots moving on screen
-const playerOneshootsOnScreen = [];
-const playerTwoshootsOnScreen = [];
-
-// player lives
-let playerOneLives = 10;
-let playerTwoLives = 10;
 
 window.onload = function ()  {
   let canvas = document.getElementById('app');
   let context = canvas.getContext('2d');
 
-  const CANVAS_WIDTH = canvas.width;
-  const CANVAS_HEIGHT = canvas.height;
-
-  // Set frame rate to 30 frames per second
+  // Set frames
   setInterval(updateCanvas,  1000/60);
   
+  // players vertical position
+  let playerOnePosition = canvas.height/2;
+  let playerTwoPosition = canvas.height/2;
+
+  // shoots moving on screen
+  const playerOneshootsOnScreen = [];
+  const playerTwoshootsOnScreen = [];
+
+  // player lives
+  let playerOneLives = 10;
+  let playerTwoLives = 10;
+
   const handleKeyboardInput = (e) => {
     const { key } = e;
     if (Object.keys(keyboardPlayerMoves).includes(key)) {
@@ -69,7 +68,7 @@ window.onload = function ()  {
   
   const playerTwoShoot = () => {
     const shoot = {
-      xPosition: CANVAS_WIDTH,
+      xPosition: canvas.width,
       yPosition: playerTwoPosition + PLAYER_HEIGHT/2,
     }
     playerTwoshootsOnScreen.push(shoot);
@@ -96,15 +95,15 @@ window.onload = function ()  {
 
   const drawCanvas = () => {
     // create the canvas
-    context.fillStyle = 'blue';
-    context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
     // Add the text color
     context.fillStyle = 'white';
 
     // Add players 
     context.fillRect(0, playerOnePosition, PLAYER_WIDTH, PLAYER_HEIGHT);
-    context.fillRect(CANVAS_WIDTH - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
+    context.fillRect(canvas.width - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
 
     // Draw players shoot
     playerOneshootsOnScreen.forEach(shoot => {
@@ -116,8 +115,8 @@ window.onload = function ()  {
   
     // Add lives text
     context.font = "20px serif";
-    context.fillText(`Lives: ${playerOneLives}`, 70, CANVAS_HEIGHT - 10);
-    context.fillText(`Lives: ${playerTwoLives}`, CANVAS_WIDTH - 120, CANVAS_HEIGHT - 10); 
+    context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
+    context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
   }	
 
   const checkCollision = (positionOne, positionTwo, margin) => {
@@ -138,9 +137,9 @@ window.onload = function ()  {
     }
   }
 
-  const checkshootHit = () => {
+  const checkShootsPosition = () => {
     playerOneshootsOnScreen.forEach(shoot => {
-      if (checkCollision(shoot.xPosition, CANVAS_WIDTH, SHOOT_SPEED - 1) && 
+      if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
           checkCollision(shoot.yPosition, playerTwoPosition, PLAYER_HEIGHT)) {
         playerTwoLives -= 1;
         checkWinCondition();
@@ -158,6 +157,6 @@ window.onload = function ()  {
   function updateCanvas(){
       moveshootsOnScreen();
       drawCanvas();
-      checkshootHit()
+      checkShootsPosition()
   }
 }
