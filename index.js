@@ -1,11 +1,15 @@
 const constants = require('./constants.js');
-const Rx = require('rxjs');
+const Rx = require('rxjs/Rx');
+const throttleTime = require('rxjs/operator/throttleTime')
+// const { rxSubscriber } = require('./bundle.js');
 
 const { SHOOT_SPEED,
   PLAYER_MOVEMENT,
   SHOOT_DIMENSION,
   PLAYER_HEIGHT,
-  PLAYER_WIDTH } = constants;
+  PLAYER_WIDTH,
+  MOVE_THROTTLE,
+  SHOOT_THROTTLE } = constants;
 
 
 window.onload = function ()  {
@@ -14,7 +18,7 @@ window.onload = function ()  {
 
   // set frames for object movements. calls the function that modifies the position of the shots, also the one that updates the position of the objects and the one that verifies the collision conditions
   setInterval(updateGameState,  1000/60);
-  
+
   // players vertical position
   let playerOnePosition = canvas.height/2;
   let playerTwoPosition = canvas.height/2;
@@ -29,18 +33,19 @@ window.onload = function ()  {
 
   // handle player vertical movement and shoots
   const handleKeyboardInput = (e) => {
-    const { key } = e;
-    if (Object.keys(keyboardPlayerMoves).includes(key)) {
-      const movePlayer = keyboardPlayerMoves[key];
-      const positionChangeValue = keyboardMoveValues[key];
-      movePlayer(positionChangeValue);
-    } else if(Object.keys(keyboardPlayerShoots).includes(key)) {
-      const playerShoot = keyboardPlayerShoots[key];
-      playerShoot();
+    if (!e.repeat) {
+      const { key } = e;
+      let event;
+      if (['w', 's'].includes(e.key)) { event = new CustomEvent('P1Move', {detail: key}) }
+      else if (['ArrowUp', 'ArrowDown'].includes(e.key)) { event = new CustomEvent('P2Move', {detail: key}) }
+      else if (key == 'd') { event = new Event('P1Shoot') }
+      else if (key == 'ArrowLeft') { event = new Event('P2Shoot') };
+
+      if (event) { window.dispatchEvent(event) };
     }
   }
 
-  window.addEventListener('keydown', handleKeyboardInput)
+  window.addEventListener('keydown', handleKeyboardInput);
 
   // change shoots position
   const moveshootsOnScreen = () => {
@@ -57,7 +62,7 @@ window.onload = function ()  {
   const movePlayerTwo = (positionChangeValue) => {
     playerTwoPosition += positionChangeValue;
   }
-  
+
   // add shoot to player one list
   const playerOneShoot = () => {
     const shoot = {
@@ -75,7 +80,7 @@ window.onload = function ()  {
     }
     playerTwoshootsOnScreen.push(shoot);
   }
-  
+
   // move functions by keyword
   const keyboardPlayerMoves = {
     w: movePlayerOne,
@@ -83,13 +88,13 @@ window.onload = function ()  {
     ArrowUp: movePlayerTwo,
     ArrowDown: movePlayerTwo,
   }
-  
+
   // shoot functions by keyword
   const keyboardPlayerShoots = {
     d: playerOneShoot,
     ArrowLeft: playerTwoShoot,
   }
-  
+
   // change in positions value by keyword
   const keyboardMoveValues = {
     w: -PLAYER_MOVEMENT,
@@ -106,7 +111,7 @@ window.onload = function ()  {
     // Add text color
     context.fillStyle = 'white';
 
-    // Add players 
+    // Add players
     context.fillRect(0, playerOnePosition, PLAYER_WIDTH, PLAYER_HEIGHT);
     context.fillRect(canvas.width - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
 
@@ -116,20 +121,20 @@ window.onload = function ()  {
     })
     playerTwoshootsOnScreen.forEach(shoot => {
       context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
-    })  
-  
+    })
+
     // Add number of lives per playes text
     context.font = "20px serif";
     context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
-    context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
-  }	
+    context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10);
+  }
 
   // check if a shoot has reached a player
   const checkCollision = (positionOne, positionTwo, margin) => {
     if (positionOne <= positionTwo + margin  && positionOne >= positionTwo) return true;
     return false;
   }
-  
+
   const resetGame = () => {
     playerTwoLives = 10;
     playerOneLives = 10;
@@ -146,14 +151,14 @@ window.onload = function ()  {
   // check if players 1 or 2 shoot has hit the opponent
   const checkShootsPosition = () => {
     playerOneshootsOnScreen.forEach(shoot => {
-      if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
+      if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) &&
           checkCollision(shoot.yPosition, playerTwoPosition, PLAYER_HEIGHT)) {
         playerTwoLives -= 1;
         checkWinCondition();
       }
     })
     playerTwoshootsOnScreen.forEach(shoot => {
-      if (checkCollision(0, shoot.xPosition, SHOOT_SPEED - 1) && 
+      if (checkCollision(0, shoot.xPosition, SHOOT_SPEED - 1) &&
           checkCollision(shoot.yPosition, playerOnePosition, PLAYER_HEIGHT)) {
         playerOneLives -= 1;
         checkWinCondition();
@@ -167,4 +172,29 @@ window.onload = function ()  {
       drawCanvas();
       checkShootsPosition()
   }
-}
+
+  Rx.Observable.fromEvent(window, 'P1Move')
+    .throttleTime(MOVE_THROTTLE)
+    .subscribe(e => {
+      console.log(e);
+      const positionChangeValue = keyboardMoveValues[e.detail];
+      movePlayerOne(positionChangeValue);
+    });
+  Rx.Observable.fromEvent(window, 'P2Move')
+    .throttleTime(MOVE_THROTTLE)
+    .subscribe(e => {
+      const positionChangeValue = keyboardMoveValues[e.detail];
+      movePlayerTwo(positionChangeValue);
+    });
+  Rx.Observable.fromEvent(window, 'P1Shoot')
+    .throttleTime(SHOOT_THROTTLE)
+    .subscribe(e => {
+      playerOneShoot();
+    });
+    Rx.Observable.fromEvent(window, 'P2Shoot')
+    .throttleTime(SHOOT_THROTTLE)
+    .subscribe(e => {
+      playerTwoShoot();
+    });
+
+  }
