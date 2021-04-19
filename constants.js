@@ -13,7 +13,7 @@ const PLAYER_WIDTH = 10;
 
 // players throttle
 const MOVE_THROTTLE = 200;
-const SHOOT_THROTTLE = 500;
+const SHOOT_THROTTLE = 100;
 
 const constants = {
   SHOOT_SPEED,

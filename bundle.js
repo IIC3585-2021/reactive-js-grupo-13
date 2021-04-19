@@ -14,7 +14,7 @@ const PLAYER_WIDTH = 10;
 
 // players throttle
 const MOVE_THROTTLE = 200;
-const SHOOT_THROTTLE = 500;
+const SHOOT_THROTTLE = 100;
 
 const constants = {
   SHOOT_SPEED,
@@ -70,22 +70,12 @@ window.onload = function ()  {
       else if (['ArrowUp', 'ArrowDown'].includes(e.key)) { event = new CustomEvent('P2Move', {detail: key}) }
       else if (key == 'd') { event = new Event('P1Shoot') }
       else if (key == 'ArrowLeft') { event = new Event('P2Shoot') };
-      event ? window.dispatchEvent(event) : null;
 
-      // if (Object.keys(keyboardPlayerMoves).includes(key)) {
-      //   const movePlayer = keyboardPlayerMoves[key];
-      //   const positionChangeValue = keyboardMoveValues[key];
-      //   movePlayer(positionChangeValue);
-      // } else if(Object.keys(keyboardPlayerShoots).includes(key)) {
-      //   const playerShoot = keyboardPlayerShoots[key];
-      //   playerShoot();
-      // }
+      if (event) { window.dispatchEvent(event) };
     }
   }
 
   window.addEventListener('keydown', handleKeyboardInput);
-
-
 
   // change shoots position
   const moveshootsOnScreen = () => {
@@ -214,6 +204,7 @@ window.onload = function ()  {
   }
 
   Rx.Observable.fromEvent(window, 'P1Move')
+    .throttleTime(MOVE_THROTTLE)
     .subscribe(e => {
       console.log(e);
       const positionChangeValue = keyboardMoveValues[e.detail];
@@ -235,7 +226,8 @@ window.onload = function ()  {
     .subscribe(e => {
       playerTwoShoot();
     });
-}
+
+  }
 
 },{"./constants.js":1,"rxjs/Rx":234,"rxjs/operator/throttleTime":451}],3:[function(require,module,exports){
 "use strict";
