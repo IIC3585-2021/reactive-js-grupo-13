@@ -30,8 +30,6 @@ const upObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == '
 const downObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowDown'));
 const leftObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowLeft'), Op.throttleTime(SHOOT_TIME));
 
-const
-
 // obrsevables para shoots
 const source = Rx.interval(FREQUENCY);
 source.pipe(

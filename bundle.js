@@ -64,7 +64,6 @@ const {
 } = constants
 
 const pressObservable = Rx.fromEvent(document, 'keydown').pipe(Op.filter(e => !e.repeat)); // observable principal
-const releaseObservable = Rx.fromEvent(document, 'keyup');
 
 // observables por tecla
 const wObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'w'));
@@ -74,15 +73,6 @@ const dObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'd
 const upObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowUp'));
 const downObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowDown'));
 const leftObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowLeft'), Op.throttleTime(SHOOT_TIME));
-
-const moveTimer = Rx.interval(100);
-moveTimer.pipe(
-  Op.merge(
-    pressObservable,
-    releaseObservable
-  )
-)
-
 
 // obrsevables para shoots
 const source = Rx.interval(FREQUENCY);
