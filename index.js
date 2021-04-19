@@ -15,19 +15,22 @@ const {
 
 const {
   FREQUENCY,
+  SHOOT_TIME,
+  MOVE_TIME
 } = constants
 
-const pressObservable = Rx.fromEvent(document, 'keydown'); // observable principal
+const pressObservable = Rx.fromEvent(document, 'keydown').pipe(Op.filter(e => !e.repeat)); // observable principal
 
 // observables por tecla
-const wObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'w'));
-const sObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 's'));
-const dObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'd'));
+const wObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'w'));
+const sObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 's'));
+const dObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'd'), Op.throttleTime(SHOOT_TIME));
 
-const upObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowUp'));
-const downObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowDown'));
-const leftObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowLeft'));
+const upObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowUp'));
+const downObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowDown'));
+const leftObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e == 'ArrowLeft'), Op.throttleTime(SHOOT_TIME));
 
+const
 
 // obrsevables para shoots
 const source = Rx.interval(FREQUENCY);
@@ -43,27 +46,11 @@ source.pipe(
   ).subscribe(() => checkShootsPosition());
 
 // crear un shot
-dObservable.subscribe(function () {
-  addPlayerOneShot();
-});
-
-leftObservable.subscribe(function () {
-  addPlayerTwoShot();
-});
+dObservable.subscribe(() => addPlayerOneShot());
+leftObservable.subscribe(() => addPlayerTwoShot());
 
 // desplazamiento jugadores
-wObservable.subscribe(function () {
-  changePlayerOnePosition(-1);
-});
-
-sObservable.subscribe(function () {
-  changePlayerOnePosition(1);
-});
-
-upObservable.subscribe(function () {
-  changePlayerTwoPosition(-1);
-});
-
-downObservable.subscribe(function () {
-  changePlayerTwoPosition(1);
-});
+wObservable.subscribe(() => changePlayerOnePosition(-1));
+sObservable.subscribe(() => changePlayerOnePosition(1));
+upObservable.subscribe(() => changePlayerTwoPosition(-1));
+downObservable.subscribe(() => changePlayerTwoPosition(1));

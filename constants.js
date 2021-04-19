@@ -21,6 +21,9 @@ const playerTwoshootsOnScreen = [];
 // Frames
 const FREQUENCY = 1000/60;
 
+const SHOOT_TIME = 500;
+const MOVE_TIME = 200;
+
 const constants = {
     canvas,
     context,
@@ -32,6 +35,8 @@ const constants = {
     playerOneshootsOnScreen,
     playerTwoshootsOnScreen,
     FREQUENCY,
+    SHOOT_TIME,
+    MOVE_TIME
 }
 
 module.exports = constants;
