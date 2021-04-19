@@ -1,5 +1,6 @@
 const constants = require('./constants.js');
 const Rx = require('rxjs');
+const Op = require('rxjs/operators')
 
 const { SHOOT_SPEED,
   PLAYER_MOVEMENT,
@@ -7,164 +8,140 @@ const { SHOOT_SPEED,
   PLAYER_HEIGHT,
   PLAYER_WIDTH } = constants;
 
+let canvas = document.getElementById('app');
+let context = canvas.getContext('2d');
 
-window.onload = function ()  {
-  let canvas = document.getElementById('app');
-  let context = canvas.getContext('2d');
+const drawCanvas = () => {
+  context.fillStyle = 'black';
+  context.fillRect(0, 0, canvas.width, canvas.height);
 
-  // set frames for object movements. calls the function that modifies the position of the shots, also the one that updates the position of the objects and the one that verifies the collision conditions
-  setInterval(updateGameState,  1000/60);
-  
-  // players vertical position
-  let playerOnePosition = canvas.height/2;
-  let playerTwoPosition = canvas.height/2;
+  // Add text color
+  context.fillStyle = 'white';
 
-  // shoots moving on screen
-  const playerOneshootsOnScreen = [];
-  const playerTwoshootsOnScreen = [];
+  // Add players 
+  context.fillRect(0, playerOnePosition, PLAYER_WIDTH, PLAYER_HEIGHT);
+  context.fillRect(canvas.width - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
 
-  // # of player lives
-  let playerOneLives = 10;
-  let playerTwoLives = 10;
+  // Draw players shoot
+  playerOneshootsOnScreen.forEach(shoot => {
+    context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
+  })
+  playerTwoshootsOnScreen.forEach(shoot => {
+    context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
+  })  
 
-  // handle player vertical movement and shoots
-  const handleKeyboardInput = (e) => {
-    const { key } = e;
-    if (Object.keys(keyboardPlayerMoves).includes(key)) {
-      const movePlayer = keyboardPlayerMoves[key];
-      const positionChangeValue = keyboardMoveValues[key];
-      movePlayer(positionChangeValue);
-    } else if(Object.keys(keyboardPlayerShoots).includes(key)) {
-      const playerShoot = keyboardPlayerShoots[key];
-      playerShoot();
-    }
-  }
+  // Add number of lives per playes text
+  context.font = "20px serif";
+  context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
+  context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
+}	
 
-  window.addEventListener('keydown', handleKeyboardInput)
+const pressObservable = Rx.fromEvent(document, 'keydown'); // observable principal
 
-  // change shoots position
-  const moveshootsOnScreen = () => {
-    playerOneshootsOnScreen.map(shoot => shoot.xPosition += SHOOT_SPEED);
-    playerTwoshootsOnScreen.map(shoot => shoot.xPosition -= SHOOT_SPEED);
-  }
+// observables por tecla
+const wObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'w'));
+const sObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 's'));
+const dObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'd'));
 
-  // change player one vertical position
-  const movePlayerOne = (positionChangeValue) => {
-    playerOnePosition += positionChangeValue;
-  }
+const upObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowUp'));
+const downObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowDown'));
+const leftObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowLeft'));
 
-  // change player two vertical position
-  const movePlayerTwo = (positionChangeValue) => {
-    playerTwoPosition += positionChangeValue;
-  }
-  
-  // add shoot to player one list
-  const playerOneShoot = () => {
-    const shoot = {
-      xPosition: 0,
-      yPosition: playerOnePosition + PLAYER_HEIGHT/2,
-    }
-    playerOneshootsOnScreen.push(shoot);
-  }
+const playerOneshootsOnScreen = [];
+const playerTwoshootsOnScreen = [];
 
-  // add shoot to player two list
-  const playerTwoShoot = () => {
-    const shoot = {
-      xPosition: canvas.width,
-      yPosition: playerTwoPosition + PLAYER_HEIGHT/2,
-    }
-    playerTwoshootsOnScreen.push(shoot);
-  }
-  
-  // move functions by keyword
-  const keyboardPlayerMoves = {
-    w: movePlayerOne,
-    s: movePlayerOne,
-    ArrowUp: movePlayerTwo,
-    ArrowDown: movePlayerTwo,
-  }
-  
-  // shoot functions by keyword
-  const keyboardPlayerShoots = {
-    d: playerOneShoot,
-    ArrowLeft: playerTwoShoot,
-  }
-  
-  // change in positions value by keyword
-  const keyboardMoveValues = {
-    w: -PLAYER_MOVEMENT,
-    s: PLAYER_MOVEMENT,
-    ArrowUp: -PLAYER_MOVEMENT,
-    ArrowDown: PLAYER_MOVEMENT,
-  }
+const FREQUENCY = 1000/60;
 
-  // modifies the canvas
-  const drawCanvas = () => {
-    context.fillStyle = 'black';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+let playerOnePosition = canvas.height/2;
+let playerTwoPosition = canvas.height/2;
 
-    // Add text color
-    context.fillStyle = 'white';
+// # of player lives
+let playerOneLives = 10;
+let playerTwoLives = 10;
 
-    // Add players 
-    context.fillRect(0, playerOnePosition, PLAYER_WIDTH, PLAYER_HEIGHT);
-    context.fillRect(canvas.width - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
+// check if a shoot has reached a player
+const checkCollision = (positionOne, positionTwo, margin) => {
+  if (positionOne <= positionTwo + margin  && positionOne >= positionTwo) return true;
+  return false;
+}
 
-    // Draw players shoot
-    playerOneshootsOnScreen.forEach(shoot => {
-      context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
-    })
-    playerTwoshootsOnScreen.forEach(shoot => {
-      context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
-    })  
-  
-    // Add number of lives per playes text
-    context.font = "20px serif";
-    context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
-    context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
-  }	
 
-  // check if a shoot has reached a player
-  const checkCollision = (positionOne, positionTwo, margin) => {
-    if (positionOne <= positionTwo + margin  && positionOne >= positionTwo) return true;
-    return false;
-  }
-  
-  const resetGame = () => {
-    playerTwoLives = 10;
-    playerOneLives = 10;
-    playerOneshootsOnScreen.length = 0;
-    playerTwoshootsOnScreen.length = 0;
-  }
+const resetGame = () => {
+  playerTwoLives = 10;
+  playerOneLives = 10;
+  playerOneshootsOnScreen.length = 0;
+  playerTwoshootsOnScreen.length = 0;
+}
 
-  const checkWinCondition = () => {
-    if (playerOneLives === 0 || playerTwoLives === 0) {
+const checkWinCondition = () => {
+  if (playerOneLives === 0){
+      console.log("Jugador 1 gana !!!");
       resetGame();
-    }
-  }
-
-  // check if players 1 or 2 shoot has hit the opponent
-  const checkShootsPosition = () => {
-    playerOneshootsOnScreen.forEach(shoot => {
-      if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
-          checkCollision(shoot.yPosition, playerTwoPosition, PLAYER_HEIGHT)) {
-        playerTwoLives -= 1;
-        checkWinCondition();
-      }
-    })
-    playerTwoshootsOnScreen.forEach(shoot => {
-      if (checkCollision(0, shoot.xPosition, SHOOT_SPEED - 1) && 
-          checkCollision(shoot.yPosition, playerOnePosition, PLAYER_HEIGHT)) {
-        playerOneLives -= 1;
-        checkWinCondition();
-      }
-    })
-  }
-
-  // function called repeatedly within the interval
-  function updateGameState(){
-      moveshootsOnScreen();
-      drawCanvas();
-      checkShootsPosition()
+  }else if (playerTwoLives === 0){
+    console.log("Jugador 2 gana !!!");
+    resetGame();
   }
 }
+
+
+// check if players 1 or 2 shoot has hit the opponent
+const checkShootsPosition = () => {
+  playerOneshootsOnScreen.forEach(shoot => {
+    if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
+        checkCollision(shoot.yPosition, playerTwoPosition, PLAYER_HEIGHT)) {
+      playerTwoLives -= 1;
+      checkWinCondition();
+    }
+  })
+  playerTwoshootsOnScreen.forEach(shoot => {
+    if (checkCollision(0, shoot.xPosition, SHOOT_SPEED - 1) && 
+        checkCollision(shoot.yPosition, playerOnePosition, PLAYER_HEIGHT)) {
+      playerOneLives -= 1;
+      checkWinCondition();
+    }
+  })
+}
+
+// obrsevables para shoots
+const source = Rx.interval(FREQUENCY);
+source.pipe(
+    Op.mergeMap(
+      val => Rx.interval(FREQUENCY).pipe(Op.take(1)),
+      () => {
+        playerOneshootsOnScreen.map((shoot) => shoot.xPosition += SHOOT_SPEED);
+        playerTwoshootsOnScreen.map((shoot) => shoot.xPosition -= SHOOT_SPEED);
+        drawCanvas();
+      },
+      1
+    )
+  ).subscribe(() => checkShootsPosition());
+
+dObservable.subscribe(function () {
+  playerOneshootsOnScreen.push({
+    xPosition: 0,
+    yPosition: playerOnePosition + PLAYER_HEIGHT/2,
+  })
+});
+
+leftObservable.subscribe(function () {
+  playerTwoshootsOnScreen.push({
+    xPosition: canvas.width,
+    yPosition: playerTwoPosition + PLAYER_HEIGHT/2,
+  })
+});
+
+wObservable.subscribe(function () {
+  playerOnePosition -= PLAYER_MOVEMENT;
+});
+
+sObservable.subscribe(function () {
+  playerOnePosition += PLAYER_MOVEMENT;
+});
+
+upObservable.subscribe(function () {
+  playerTwoPosition -= PLAYER_MOVEMENT;
+});
+
+downObservable.subscribe(function () {
+  playerTwoPosition += PLAYER_MOVEMENT;
+});
