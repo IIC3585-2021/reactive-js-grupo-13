@@ -6,7 +6,8 @@ const { SHOOT_SPEED,
   PLAYER_MOVEMENT,
   SHOOT_DIMENSION,
   PLAYER_HEIGHT,
-  PLAYER_WIDTH } = constants;
+  PLAYER_WIDTH,
+ } = constants;
 
 let canvas = document.getElementById('app');
 let context = canvas.getContext('2d');
@@ -75,10 +76,10 @@ const resetGame = () => {
 
 const checkWinCondition = () => {
   if (playerOneLives === 0){
-      console.log("Jugador 1 gana !!!");
+      console.log("Jugador 2 gana !!!");
       resetGame();
   }else if (playerTwoLives === 0){
-    console.log("Jugador 2 gana !!!");
+    console.log("Jugador 1 gana !!!");
     resetGame();
   }
 }

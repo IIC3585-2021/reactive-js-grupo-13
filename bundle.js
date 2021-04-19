@@ -10396,12 +10396,18 @@ const SHOOT_DIMENSION = 6;
 const PLAYER_HEIGHT = 50;
 const PLAYER_WIDTH = 10;
 
+// players throttle
+const MOVE_THROTTLE = 200;
+const SHOOT_THROTTLE = 100;
+
 const constants = {
   SHOOT_SPEED,
   PLAYER_MOVEMENT,
   SHOOT_DIMENSION,
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
+  MOVE_THROTTLE,
+  SHOOT_THROTTLE
 };
 
 module.exports = constants
@@ -10414,7 +10420,8 @@ const { SHOOT_SPEED,
   PLAYER_MOVEMENT,
   SHOOT_DIMENSION,
   PLAYER_HEIGHT,
-  PLAYER_WIDTH } = constants;
+  PLAYER_WIDTH,
+ } = constants;
 
 let canvas = document.getElementById('app');
 let context = canvas.getContext('2d');
@@ -10524,11 +10531,6 @@ source.pipe(
     )
   ).subscribe(() => checkShootsPosition());
 
-//player1ShootStream.subscribe(function() {
-//  playerOneshootsOnScreen.map(shoot => shoot.xPosition += SHOOT_SPEED)
-//  .filter(shoot => shoot >= 0 && shoot <= canvas.width)
-//});
-
 dObservable.subscribe(function () {
   playerOneshootsOnScreen.push({
     xPosition: 0,
@@ -10558,28 +10560,5 @@ upObservable.subscribe(function () {
 downObservable.subscribe(function () {
   playerTwoPosition += PLAYER_MOVEMENT;
 });
-
-window.onload = function ()  {
-  
-
-  // set frames for object movements. calls the function that modifies the position of the shots, also the one that updates the position of the objects and the one that verifies the collision conditions
-  
-  
-  // modifies the canvas
-  
-
-  
-  
-  
-
-  
-
-  
-
-  // function called repeatedly within the interval
-  function updateGameState(){
-      //drawCanvas();
-  }
-}
 
 },{"./constants.js":201,"rxjs":1,"rxjs/operators":200}]},{},[202]);

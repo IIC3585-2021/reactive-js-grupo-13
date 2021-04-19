@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/IIC3585-2021/reactive-js-grupo-13#readme",
   "dependencies": {
-    "rxjs": "^6.6.7"
+    "rxjs": "^6.6.7",
+    "rxjs-compat": "^6.6.7"
   }
 }
