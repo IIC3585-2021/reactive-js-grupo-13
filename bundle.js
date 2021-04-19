@@ -10383,74 +10383,64 @@ var zipAll_1 = require("../internal/operators/zipAll");
 exports.zipAll = zipAll_1.zipAll;
 
 },{"../internal/operators/audit":45,"../internal/operators/auditTime":46,"../internal/operators/buffer":47,"../internal/operators/bufferCount":48,"../internal/operators/bufferTime":49,"../internal/operators/bufferToggle":50,"../internal/operators/bufferWhen":51,"../internal/operators/catchError":52,"../internal/operators/combineAll":53,"../internal/operators/combineLatest":54,"../internal/operators/concat":55,"../internal/operators/concatAll":56,"../internal/operators/concatMap":57,"../internal/operators/concatMapTo":58,"../internal/operators/count":59,"../internal/operators/debounce":60,"../internal/operators/debounceTime":61,"../internal/operators/defaultIfEmpty":62,"../internal/operators/delay":63,"../internal/operators/delayWhen":64,"../internal/operators/dematerialize":65,"../internal/operators/distinct":66,"../internal/operators/distinctUntilChanged":67,"../internal/operators/distinctUntilKeyChanged":68,"../internal/operators/elementAt":69,"../internal/operators/endWith":70,"../internal/operators/every":71,"../internal/operators/exhaust":72,"../internal/operators/exhaustMap":73,"../internal/operators/expand":74,"../internal/operators/filter":75,"../internal/operators/finalize":76,"../internal/operators/find":77,"../internal/operators/findIndex":78,"../internal/operators/first":79,"../internal/operators/groupBy":80,"../internal/operators/ignoreElements":81,"../internal/operators/isEmpty":82,"../internal/operators/last":83,"../internal/operators/map":84,"../internal/operators/mapTo":85,"../internal/operators/materialize":86,"../internal/operators/max":87,"../internal/operators/merge":88,"../internal/operators/mergeAll":89,"../internal/operators/mergeMap":90,"../internal/operators/mergeMapTo":91,"../internal/operators/mergeScan":92,"../internal/operators/min":93,"../internal/operators/multicast":94,"../internal/operators/observeOn":95,"../internal/operators/onErrorResumeNext":96,"../internal/operators/pairwise":97,"../internal/operators/partition":98,"../internal/operators/pluck":99,"../internal/operators/publish":100,"../internal/operators/publishBehavior":101,"../internal/operators/publishLast":102,"../internal/operators/publishReplay":103,"../internal/operators/race":104,"../internal/operators/reduce":105,"../internal/operators/refCount":106,"../internal/operators/repeat":107,"../internal/operators/repeatWhen":108,"../internal/operators/retry":109,"../internal/operators/retryWhen":110,"../internal/operators/sample":111,"../internal/operators/sampleTime":112,"../internal/operators/scan":113,"../internal/operators/sequenceEqual":114,"../internal/operators/share":115,"../internal/operators/shareReplay":116,"../internal/operators/single":117,"../internal/operators/skip":118,"../internal/operators/skipLast":119,"../internal/operators/skipUntil":120,"../internal/operators/skipWhile":121,"../internal/operators/startWith":122,"../internal/operators/subscribeOn":123,"../internal/operators/switchAll":124,"../internal/operators/switchMap":125,"../internal/operators/switchMapTo":126,"../internal/operators/take":127,"../internal/operators/takeLast":128,"../internal/operators/takeUntil":129,"../internal/operators/takeWhile":130,"../internal/operators/tap":131,"../internal/operators/throttle":132,"../internal/operators/throttleTime":133,"../internal/operators/throwIfEmpty":134,"../internal/operators/timeInterval":135,"../internal/operators/timeout":136,"../internal/operators/timeoutWith":137,"../internal/operators/timestamp":138,"../internal/operators/toArray":139,"../internal/operators/window":140,"../internal/operators/windowCount":141,"../internal/operators/windowTime":142,"../internal/operators/windowToggle":143,"../internal/operators/windowWhen":144,"../internal/operators/withLatestFrom":145,"../internal/operators/zip":146,"../internal/operators/zipAll":147}],201:[function(require,module,exports){
+const canvas = document.getElementById('app');
+const context = canvas.getContext('2d');
+
+// players size
+const PLAYER_HEIGHT = 50;
+const PLAYER_WIDTH = 10;
+
+// shoot size
+const SHOOT_DIMENSION = 6;
+
 // shot speed
 const SHOOT_SPEED = 30;
 
 // players vertical movement
 const PLAYER_MOVEMENT = 40;
 
-// shoot size
-const SHOOT_DIMENSION = 6;
+// active shoots
+const playerOneshootsOnScreen = [];
+const playerTwoshootsOnScreen = [];
 
-// players size
-const PLAYER_HEIGHT = 50;
-const PLAYER_WIDTH = 10;
-
-// players throttle
-const MOVE_THROTTLE = 200;
-const SHOOT_THROTTLE = 100;
+// Frames
+const FREQUENCY = 1000/60;
 
 const constants = {
-  SHOOT_SPEED,
-  PLAYER_MOVEMENT,
-  SHOOT_DIMENSION,
-  PLAYER_HEIGHT,
-  PLAYER_WIDTH,
-  MOVE_THROTTLE,
-  SHOOT_THROTTLE
-};
+    canvas,
+    context,
+    PLAYER_HEIGHT,
+    PLAYER_WIDTH,
+    SHOOT_DIMENSION,
+    SHOOT_SPEED,
+    PLAYER_MOVEMENT,
+    playerOneshootsOnScreen,
+    playerTwoshootsOnScreen,
+    FREQUENCY,
+}
 
-module.exports = constants
+module.exports = constants;
 },{}],202:[function(require,module,exports){
-const constants = require('./constants.js');
+const utils = require('./utils.js');
 const Rx = require('rxjs');
-const Op = require('rxjs/operators')
+const Op = require('rxjs/operators');
+const constants = require('./constants.js');
 
-const { SHOOT_SPEED,
-  PLAYER_MOVEMENT,
-  SHOOT_DIMENSION,
-  PLAYER_HEIGHT,
-  PLAYER_WIDTH,
- } = constants;
+const {
+  drawCanvas,
+  move_shots,
+  checkShootsPosition,
+  changePlayerOnePosition,
+  changePlayerTwoPosition,
+  addPlayerOneShot,
+  addPlayerTwoShot,
+} = utils;
 
-let canvas = document.getElementById('app');
-let context = canvas.getContext('2d');
+const {
+  FREQUENCY,
+} = constants
 
-const drawCanvas = () => {
-  context.fillStyle = 'black';
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Add text color
-  context.fillStyle = 'white';
-
-  // Add players 
-  context.fillRect(0, playerOnePosition, PLAYER_WIDTH, PLAYER_HEIGHT);
-  context.fillRect(canvas.width - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
-
-  // Draw players shoot
-  playerOneshootsOnScreen.forEach(shoot => {
-    context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
-  })
-  playerTwoshootsOnScreen.forEach(shoot => {
-    context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
-  })  
-
-  // Add number of lives per playes text
-  context.font = "20px serif";
-  context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
-  context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
-}	
-
+console.log(FREQUENCY);
 const pressObservable = Rx.fromEvent(document, 'keydown'); // observable principal
 
 // observables por tecla
@@ -10462,60 +10452,6 @@ const upObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e =
 const downObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowDown'));
 const leftObservable = pressObservable.pipe(Op.map(e => e.key), Op.filter(e => e == 'ArrowLeft'));
 
-const playerOneshootsOnScreen = [];
-const playerTwoshootsOnScreen = [];
-
-const FREQUENCY = 1000/60;
-
-let playerOnePosition = canvas.height/2;
-let playerTwoPosition = canvas.height/2;
-
-// # of player lives
-let playerOneLives = 10;
-let playerTwoLives = 10;
-
-// check if a shoot has reached a player
-const checkCollision = (positionOne, positionTwo, margin) => {
-  if (positionOne <= positionTwo + margin  && positionOne >= positionTwo) return true;
-  return false;
-}
-
-
-const resetGame = () => {
-  playerTwoLives = 10;
-  playerOneLives = 10;
-  playerOneshootsOnScreen.length = 0;
-  playerTwoshootsOnScreen.length = 0;
-}
-
-const checkWinCondition = () => {
-  if (playerOneLives === 0){
-      console.log("Jugador 1 gana !!!");
-      resetGame();
-  }else if (playerTwoLives === 0){
-    console.log("Jugador 2 gana !!!");
-    resetGame();
-  }
-}
-
-
-// check if players 1 or 2 shoot has hit the opponent
-const checkShootsPosition = () => {
-  playerOneshootsOnScreen.forEach(shoot => {
-    if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
-        checkCollision(shoot.yPosition, playerTwoPosition, PLAYER_HEIGHT)) {
-      playerTwoLives -= 1;
-      checkWinCondition();
-    }
-  })
-  playerTwoshootsOnScreen.forEach(shoot => {
-    if (checkCollision(0, shoot.xPosition, SHOOT_SPEED - 1) && 
-        checkCollision(shoot.yPosition, playerOnePosition, PLAYER_HEIGHT)) {
-      playerOneLives -= 1;
-      checkWinCondition();
-    }
-  })
-}
 
 // obrsevables para shoots
 const source = Rx.interval(FREQUENCY);
@@ -10523,8 +10459,7 @@ source.pipe(
     Op.mergeMap(
       val => Rx.interval(FREQUENCY).pipe(Op.take(1)),
       () => {
-        playerOneshootsOnScreen.map((shoot) => shoot.xPosition += SHOOT_SPEED);
-        playerTwoshootsOnScreen.map((shoot) => shoot.xPosition -= SHOOT_SPEED);
+        move_shots();
         drawCanvas();
       },
       1
@@ -10532,33 +10467,155 @@ source.pipe(
   ).subscribe(() => checkShootsPosition());
 
 dObservable.subscribe(function () {
-  playerOneshootsOnScreen.push({
-    xPosition: 0,
-    yPosition: playerOnePosition + PLAYER_HEIGHT/2,
-  })
+  addPlayerOneShot();
 });
 
 leftObservable.subscribe(function () {
-  playerTwoshootsOnScreen.push({
-    xPosition: canvas.width,
-    yPosition: playerTwoPosition + PLAYER_HEIGHT/2,
-  })
+  addPlayerTwoShot();
 });
 
 wObservable.subscribe(function () {
-  playerOnePosition -= PLAYER_MOVEMENT;
+  changePlayerOnePosition(-1);
 });
 
 sObservable.subscribe(function () {
-  playerOnePosition += PLAYER_MOVEMENT;
+  changePlayerOnePosition(1);
 });
 
 upObservable.subscribe(function () {
-  playerTwoPosition -= PLAYER_MOVEMENT;
+  changePlayerTwoPosition(-1);
 });
 
 downObservable.subscribe(function () {
-  playerTwoPosition += PLAYER_MOVEMENT;
+  changePlayerTwoPosition(1);
 });
 
-},{"./constants.js":201,"rxjs":1,"rxjs/operators":200}]},{},[202]);
+},{"./constants.js":201,"./utils.js":203,"rxjs":1,"rxjs/operators":200}],203:[function(require,module,exports){
+const constants = require("./constants");
+
+const {
+    canvas,
+    context,
+    PLAYER_HEIGHT,
+    PLAYER_WIDTH,
+    SHOOT_DIMENSION,
+    SHOOT_SPEED,
+    PLAYER_MOVEMENT,
+    playerOneshootsOnScreen,
+    playerTwoshootsOnScreen,
+} = constants;
+
+// player positions
+let playerOnePosition = canvas.height/2;
+let playerTwoPosition = canvas.height/2;
+
+// # of player lives
+let playerOneLives = 10;
+let playerTwoLives = 10;
+
+const drawCanvas = () => {
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  
+    // Add text color
+    context.fillStyle = 'white';
+  
+    // Add players 
+    context.fillRect(0, playerOnePosition, PLAYER_WIDTH, PLAYER_HEIGHT);
+    context.fillRect(canvas.width - PLAYER_WIDTH, playerTwoPosition, PLAYER_WIDTH, PLAYER_HEIGHT);
+  
+    // Draw players shoot
+    playerOneshootsOnScreen.forEach(shoot => {
+      context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
+    })
+    playerTwoshootsOnScreen.forEach(shoot => {
+      context.fillRect(shoot.xPosition - SHOOT_DIMENSION/2, shoot.yPosition-SHOOT_DIMENSION, SHOOT_DIMENSION, SHOOT_DIMENSION);
+    })  
+  
+    // Add number of lives per playes text
+    context.font = "20px serif";
+    context.fillText(`Lives: ${playerOneLives}`, 70, canvas.height - 10);
+    context.fillText(`Lives: ${playerTwoLives}`, canvas.width - 120, canvas.height - 10); 
+}	
+
+// check if a shoot has reached a player
+const checkCollision = (positionOne, positionTwo, margin) => {
+    if (positionOne <= positionTwo + margin  && positionOne >= positionTwo) return true;
+    return false;
+  }
+
+
+const resetGame = () => {
+    playerTwoLives = 10;
+    playerOneLives = 10;
+    playerOneshootsOnScreen.length = 0;
+    playerTwoshootsOnScreen.length = 0;
+  }
+  
+const checkWinCondition = () => {
+    if (playerOneLives === 0){
+        console.log("Jugador 2 gana !!!");
+        resetGame();
+    }else if (playerTwoLives === 0){
+      console.log("Jugador 1 gana !!!");
+      resetGame();
+    }
+  }
+
+// check if players 1 or 2 shoot has hit the opponent
+const checkShootsPosition = () => {
+    playerOneshootsOnScreen.forEach(shoot => {
+      if (checkCollision(shoot.xPosition, canvas.width, SHOOT_SPEED - 1) && 
+          checkCollision(shoot.yPosition, playerTwoPosition, PLAYER_HEIGHT)) {
+        playerTwoLives -= 1;
+        checkWinCondition();
+      }
+    })
+    playerTwoshootsOnScreen.forEach(shoot => {
+      if (checkCollision(0, shoot.xPosition, SHOOT_SPEED - 1) && 
+          checkCollision(shoot.yPosition, playerOnePosition, PLAYER_HEIGHT)) {
+        playerOneLives -= 1;
+        checkWinCondition();
+      }
+    })
+  }
+
+const move_shots = () => {
+    playerOneshootsOnScreen.map((shoot) => shoot.xPosition += SHOOT_SPEED);
+    playerTwoshootsOnScreen.map((shoot) => shoot.xPosition -= SHOOT_SPEED);
+}
+ 
+const changePlayerOnePosition = (direction) => {
+    playerOnePosition += direction * PLAYER_MOVEMENT;
+}
+
+const changePlayerTwoPosition = (direction) => {
+    playerTwoPosition += direction * PLAYER_MOVEMENT;
+}
+
+const addPlayerOneShot = () => {
+    playerOneshootsOnScreen.push({
+        xPosition: 0,
+        yPosition: playerOnePosition + PLAYER_HEIGHT/2,
+      });
+};
+
+const addPlayerTwoShot = () => {
+    playerTwoshootsOnScreen.push({
+        xPosition: canvas.width,
+        yPosition: playerTwoPosition + PLAYER_HEIGHT/2,
+      })
+}
+
+const utils = {
+    drawCanvas, 
+    move_shots,
+    checkShootsPosition,
+    changePlayerOnePosition,
+    changePlayerTwoPosition,
+    addPlayerOneShot,
+    addPlayerTwoShot,
+};
+
+module.exports = utils;
+},{"./constants":201}]},{},[202]);
