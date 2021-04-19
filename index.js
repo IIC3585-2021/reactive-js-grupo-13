@@ -1,6 +1,6 @@
 const constants = require('./constants.js');
 const Rx = require('rxjs/Rx');
-const throttleTime = require('rxjs/operator/throttleTime')
+// const throttleTime = require('rxjs/operator/throttleTime')
 // const { rxSubscriber } = require('./bundle.js');
 
 const { SHOOT_SPEED,
