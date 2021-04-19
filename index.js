@@ -32,16 +32,11 @@ const leftObservable = pressObservable.pipe(Op.pluck('key'), Op.filter(e => e ==
 
 // obrsevables para shoots
 const source = Rx.interval(FREQUENCY);
-source.pipe(
-    Op.mergeMap(
-      val => Rx.interval(FREQUENCY).pipe(Op.take(1)),
-      () => {
-        move_shots();
-        drawCanvas();
-      },
-      1
-    )
-  ).subscribe(() => checkShootsPosition());
+source.subscribe(() => {
+  checkShootsPosition();
+  move_shots();
+  drawCanvas();
+});
 
 // crear un shot
 dObservable.subscribe(() => addPlayerOneShot());
