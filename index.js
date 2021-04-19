@@ -42,6 +42,7 @@ source.pipe(
     )
   ).subscribe(() => checkShootsPosition());
 
+// crear un shot
 dObservable.subscribe(function () {
   addPlayerOneShot();
 });
@@ -50,6 +51,7 @@ leftObservable.subscribe(function () {
   addPlayerTwoShot();
 });
 
+// desplazamiento jugadores
 wObservable.subscribe(function () {
   changePlayerOnePosition(-1);
 });
